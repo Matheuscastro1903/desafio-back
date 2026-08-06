@@ -1,98 +1,147 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 💈 EventPass - API de Agendamento para Barbearia
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> API RESTful desenvolvida em **NestJS** com **Prisma ORM** e **SQLite** para gerenciamento de clientes, barbeiros e agendamentos de cortes de cabelo com validação automática de conflitos de horários.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+##  Sumário
+- [Sobre o Projeto](#-sobre-o-projeto)
+- [Arquitetura & Tecnologias](#-arquitetura--tecnologias)
+- [Modelagem do Banco de Dados](#-modelagem-do-banco-de-dados)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Pré-requisitos](#-pré-requisitos)
+- [Instalação e Execução](#-instalação-e-execução)
+- [Documentação da API (Swagger)](#-documentação-da-api-swagger)
+- [Regras de Negócio Implementadas](#-regras-de-negócio-implementadas)
+- [Rotas da API](#-rotas-da-api)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+##  Sobre o Projeto
 
-```bash
-$ npm install
-```
+O **EventPass - Barbearia** é uma solução de back-end completa criada para automatizar o processo de agendamento de serviços em uma barbearia. O sistema permite cadastrar clientes (usuários), profissionais (barbeiros) e gerenciar os agendamentos de forma segura e eficiente, prevenindo erros operacionais como sobreposição de horários para o mesmo barbeiro ou duplicidade de e-mails de clientes.
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ npm run start
+##  Arquitetura & Tecnologias
 
-# watch mode
-$ npm run start:dev
+O projeto foi construído utilizando os padrões de arquitetura modular recomendados pelo **NestJS**, garantindo alta escalabilidade, separação de responsabilidades e injeção de dependência eficiente.
 
-# production mode
-$ npm run start:prod
-```
+- **[NestJS](https://nestjs.com/)**: Framework Node.js progressivo para construção de aplicações eficientes e escaláveis.
+- **[TypeScript](https://www.typescriptlang.org/)**: Superset JavaScript para tipagem estática e prevenção de erros em tempo de compilação.
+- **[Prisma ORM v7](https://www.prisma.io/)**: ORM moderno para interação type-safe com o banco de dados.
+- **[SQLite](https://www.sqlite.org/)**: Banco de dados relacional em arquivo (`dev.db`), integrado via `@prisma/adapter-better-sqlite3`.
+- **[Swagger / OpenAPI](https://swagger.io/)**: Interface gráfica interativa para documentação e testes das rotas diretamente no navegador.
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ npm run test
+##  Modelagem do Banco de Dados
 
-# e2e tests
-$ npm run test:e2e
+A estrutura relacional foi modelada utilizando três entidades principais:
 
-# test coverage
-$ npm run test:cov
-```
+```prisma
+// 1. Cliente / Usuário
+model Usuario {
+  id      String   @id @default(uuid())
+  nome    String
+  email   String   @unique
+  eventos Evento[]
+}
 
-## Deployment
+// 2. Barbeiro
+model Barbeiro {
+  id            String   @id @default(uuid())
+  nome          String
+  especialidade String
+  eventos       Evento[]
+}
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+// 3. Agendamento / Evento
+model Evento {
+  id         String   @id @default(uuid())
+  startTime  DateTime
+  endTime    DateTime
+  usuarioId  String
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  barbeiroId String
+  barbeiro   Barbeiro @relation(fields: [barbeiroId], references: [id])
+}
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+---
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+##  Instalação e Execução
 
-## Resources
+1. Clonar o repositório e entrar na pasta do projeto
 
-Check out a few resources that may come in handy when working with NestJS:
+git clone <url-do-repositorio>
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-## Support
+2. Instalar as dependências do projeto
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+npm install
 
-## Stay in touch
+3. Executar as migrações do banco de dados e gerar o Prisma 
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+npx prisma migrate dev
 
-## License
+npx prisma 
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+4. Iniciar a aplicação em modo de desenvolvimento
+
+
+npm run start:dev
+
+A API estará rodando em: http://localhost:3000
+
+Documentação da API (Swagger)
+A aplicação conta com documentação interativa gerada automaticamente pelo Swagger, com exemplos e descrições pré-configurados nos DTOs.
+
+Após iniciar a aplicação, acesse no seu navegador:
+
+ http://localhost:3000/api
+
+Pela interface do Swagger, você poderá:
+
+Testar a criação, listagem, atualização e exclusão de Usuários, Barbeiros e Agendamentos.
+
+Executar os testes sem precisar preencher dados do zero (exemplos pré-carregados).
+
+
+
+
+
+##  Rotas da API
+
+Usuários (/usuarios)
+POST /usuarios - Cadastra um novo cliente
+
+GET /usuarios - Lista todos os clientes
+
+GET /usuarios/:id - Busca um cliente por ID
+
+PATCH /usuarios/:id - Atualiza dados de um cliente
+
+DELETE /usuarios/:id - Remove um cliente
+
+Barbeiros (/barbeiros)
+POST /barbeiros - Cadastra um novo barbeiro
+
+GET /barbeiros - Lista todos os barbeiros
+
+GET /barbeiros/:id - Busca um barbeiro por ID
+
+PATCH /barbeiros/:id - Atualiza dados de um barbeiro
+
+DELETE /barbeiros/:id - Remove um barbeiro
+
+Agendamentos / Eventos (/eventos)
+POST /eventos - Cria um agendamento (valida conflitos)
+
+GET /eventos - Lista todos os agendamentos (inclui dados do cliente e barbeiro)
+
+GET /eventos/:id - Busca um agendamento por ID
+
+PATCH /eventos/:id - Atualiza um agendamento
+
+DELETE /eventos/:id - Cancela/remove um agendamento
