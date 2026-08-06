@@ -67,7 +67,7 @@ model Evento {
   barbeiro   Barbeiro @relation(fields: [barbeiroId], references: [id])
 }
 
-
+```
 ---
 
 ##  Instalação e Execução
